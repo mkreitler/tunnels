@@ -12,7 +12,10 @@ game = {res: {font: null, numFont: null,
               floorTiles: null, features: null, heroes: null, monsters: null,
               bosses: null, powerCards: null, skillCards: null, combatPanels: null, combatIcons: null},
         spriteSheets: {floor: null, features: null, heroes:null, monsters: null,
-              bosses: null, powerCards: null, skillCards: null, combatPanels: null, combatIcons: null} };
+              bosses: null, powerCards: null, skillCards: null, combatPanels: null, combatIcons: null},
+        CARD_TYPE: {NONE: 0, SKILL: 1, POWER: 2},
+        bFirstSession: true,
+};
 
 game.Tunnels = new glob.NewGlobType(
   // Class Definitions --------------------------------------------------------
@@ -79,6 +82,17 @@ game.Tunnels = new glob.NewGlobType(
           if (this.bFirstPlay) {
             this.setUpGame();
           }
+          else {
+            for (key in this.menuLabels) {
+              if (this.menuLabels[key]) {
+                glob.Graphics.addListener(this.menuLabels[key]);
+                glob.UpdateLoop.addListener(this.menuLabels[key]);
+                glob.MouseInput.addListener(this.menuLabels[key]);
+                glob.KeyInput.addListener(this.menuLabels[key]);
+                // glob.TouchInput.addListener(this.menuLabels[key]);
+              }
+            }
+          }
         },
 
         exit: function() {
@@ -105,6 +119,7 @@ game.Tunnels = new glob.NewGlobType(
         },
 
         onChooseSoloGame: function() {
+          glob.GUI.flushAll();
           this.startTransOutLinear(this.startSoloSession, this.transOutDraw.bind(this), this.transOutUpdate.bind(this), game.Tunnels.TRANSITION_PERIOD, true);
         },
 
@@ -153,6 +168,8 @@ game.Tunnels = new glob.NewGlobType(
 
       setUpGame: function() {
         var args = null;
+
+        this.bFirstPlay = false;
 
         args = {
                   x: glob.Graphics.getWidth() / 2,

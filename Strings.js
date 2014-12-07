@@ -18,4 +18,8 @@ game.Strings = {
   SKILL_DESC_FEINT: "Feint lets you reduce the Power of an attack.",
   SKILL_DESC_COMBO: "Multiplies your attack by the next Power card.",
   SKILL_DESC_DEFLECT: "Divides an attack by your next Power card.",
+
+  HELP_SKILL_PLACEMENT: "Play a skill card on a highlighted box.",
+
+  INTRO_MSG_01: "Click this message to clear it.",
 };

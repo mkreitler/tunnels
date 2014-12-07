@@ -3,7 +3,9 @@
 
 game.Session = new glob.NewGlobType(
 {
-
+  PHASE_INFO: {
+    skillPlacement: {help: game.Strings.HELP_SKILL_PLACEMENT},
+  }
 },
 [
   glob.Listeners,
@@ -43,7 +45,7 @@ game.Session = new glob.NewGlobType(
         y: game.Tunnels.GUI_MESSAGE_PANEL_TOP + game.Tunnels.GUI_MESSAGE_PANEL_HEIGHT / 2,
         font: game.res.font,
         fontSize: game.Tunnels.GUI_MESSAGE_PANEL_FONT_SIZE,
-        text: "Click this message to clear it.",
+        text: "",
         activeColor: glob.Graphics.WHITE,
         selectedColor: glob.Graphics.WHITE,
         onClickedCallback: this.clearMessage.bind(this),
@@ -61,23 +63,85 @@ game.Session = new glob.NewGlobType(
     startRound: function() {
       this.tunnel.startRound();
       this.player.startRound();
+
+      this.phase = this.introPhase;
+      this.phase.start.call(this);
     },
 
     onMouseDown: function(x, y, data) {
-      return false;
+      return true;
     },
 
     onMouseUp: function(x, y, data) {
-      return false;
+      return true;
     },
 
     onMouseDrag: function(x, y, data) {
       // TODO: if this is a card, highlight the valid UI elements with
       // which it can interact.
-      return false;
+      return this.phase.canDrag(data);
     },
 
     // Game States ============================================================
+    // Crawling Phases --------------------------------------------------------
+    introPhase: {
+      start: function() {
+        if (!game.bFirstSession) {
+          this.phase.end.call(this);
+          this.phase = this.skillPhase;
+          this.phase.start.call(this);
+        }
+
+        this.messageLabel.setText(game.Strings.INTRO_MSG_01);
+        game.bFirstSession = false;
+      },
+
+      canDrag: function() {
+        return false;
+      },
+
+      end: function() {
+        // Clean up intro state?
+      }
+    },
+
+    skillPhase: {
+      start: function() {
+      },
+
+      canDrag: function(data) {
+        return data && data.cardType && data.cardType === game.CARD_TYPE.SKILL;
+      },
+
+      // start: function() {
+      //   this.tunnel.highlightCardDestinations();
+      //   this.player.highlightCardDestinations();
+      // },
+
+      // end: function() {
+      //   this.tunnel.clearCardDestinations();
+      //   this.player.clearCardDestinations();
+      // }
+    },
+
+    powerPhase: {
+      canDrag: function(data) {
+        return data && data.cardType && data.cardType === game.CARD_TYPE.POWER;
+      }
+    },
+
+    resolvePlayerMovePhase: {
+      canDrag: function() {
+        return false;
+      }
+    },
+
+    moveMonstersPhase: {
+      canDrag: function() {
+        return false;
+      }
+    },
+
     // Crawling State (player are in the tunnel) ------------------------------
     crawlingState: {
       enter: function() {
@@ -89,11 +153,20 @@ game.Session = new glob.NewGlobType(
       },
 
       update: function(dt) {
+        // Update the game.
+        if (this.phase && this.phase.update) {
+          this.phase.update.call(this, dt);
+        }
+
         // Update particles, etc.
         this.tunnel.update(dt);
       },
 
       draw: function(ctxt) {
+        if (this.phase && this.phase.preDraw) {
+          this.phase.preDraw.call(this, ctxt);
+        }
+
         // Display the background.
         this.tunnel.draw(ctxt);
 
@@ -103,6 +176,10 @@ game.Session = new glob.NewGlobType(
 
         this.tunnel.drawGUI(ctxt);
         this.player.drawGUI(ctxt);
+
+        if (this.phase && this.phase.postDraw) {
+          this.phase.postDraw.call(this, ctxt);
+        }
       }
     },
 

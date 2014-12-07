@@ -18,9 +18,9 @@ game.Player = new glob.NewGlobType(
   STARTING_ARMOR_DEFENSE: 3,
   MAX_POWER_HAND_SIZE: 6,
   MAX_SKILL_HAND_SIZE: 4,
+  MAX_SKILL_WEIGHT: 4,  // Easier skills are more heavily weighted in the "deck"
 
   SKILLS: {
-    none: null,
     chain: {name: game.Strings.CHAIN_NAME, desc: game.Strings.CHAIN_DESC, fn: "applyChain"},
     feint: {name: game.Strings.FEINT_NAME, desc: game.Strings.FEINT_DESC, fn: "applyFeint"},
     combo: {name: game.Strings.COMBO_NAME, desc: game.Strings.COMBO_DESC, fn: "applyCombo"},
@@ -169,21 +169,65 @@ game.Player = new glob.NewGlobType(
       }
     },
 
+    countSkills: function() {
+      var nSkills = 0,
+          key = null;
+
+      for (key in game.Player.SKILLS) {
+        nSkills++;
+      }
+
+      return nSkills;
+    },
+
+    getSkillValue: function() {
+      // Randomly chooses a skill from a weighted list.
+      var totalWeight = 0,
+          curWeight = game.Player.MAX_SKILL_WEIGHT,
+          value = -1,
+          chosenWeight = 0,
+          nSkills = this.countSkills(),
+          i = 0;
+
+      for (i=0; i<nSkills; ++i) {
+        totalWeight += curWeight;
+        curWeight -= 1;
+        curWeight = Math.max(1, curWeight);
+      }
+
+      chosenWeight = Math.floor(Math.random() * totalWeight);
+      curWeight = game.Player.MAX_SKILL_WEIGHT;
+      for (i=0; i<nSkills; ++i) {
+        if (chosenWeight - curWeight < 0) {
+          value = i;
+          break;
+        }
+
+        chosenWeight -= curWeight;
+        curWeight -= 1;
+        curWeight = Math.max(1, curWeight);
+      }
+
+      return value;
+    },
+
     dealSkillHand: function(nCards) {
       var i = 0,
+          value = 0,
           nSkillHandSize = 0;
 
       nSkillHandSize = glob.Util.compressArray(this.skillHand);
 
       for(i=0; i<nCards; ++i) {
+        value = this.getSkillValue();
         this.skillHand[nSkillHandSize + i] = new glob.GUI.Panel({
           spriteSheet: game.spriteSheets.skillCards,
-          frameIndex: 0,
+          frameIndex: value,
           bDraggable: true,
           x: this.curStackLeftEdge,
           y: game.Tunnels.GUI_CARD_ROW_TOP,
           mouseDelegate: this.sessionManager,
-          data: this,
+          data: {card: this, cardType: game.CARD_TYPE.SKILL, value: value},
     //   onMouseDownSound:,
     //   onMouseUpSound:,
         });
@@ -209,7 +253,7 @@ game.Player = new glob.NewGlobType(
           x: this.curStackLeftEdge,
           y: game.Tunnels.GUI_CARD_ROW_TOP,
           mouseDelegate: this.sessionManager,
-          data: {card: this, value: value},
+          data: {card: this, cardType: game.CARD_TYPE.POWER, value: value},
     //   onMouseDownSound:,
     //   onMouseUpSound:,
         });
@@ -268,6 +312,13 @@ game.Player = new glob.NewGlobType(
       // 3) Player attack panel
       // 4) Player defense panel
       var i = 0;
+
+      glob.assert(this.defenseInfoPanel, "Can't draw invalid defenseInfoPanel!");
+      glob.assert(this.attackInfoPanel, "Can't draw invalid attackInfoPanel!");
+
+      this.defenseInfoPanel.draw(ctxt);
+      this.attackInfoPanel.draw(ctxt);
+
       for (i=0; i<this.skillHand.length; ++i) {
         if (this.skillHand[i]) {
           this.skillHand[i].draw(ctxt);
@@ -279,12 +330,6 @@ game.Player = new glob.NewGlobType(
           this.powerHand[i].draw(ctxt);
         }
       }
-
-      glob.assert(this.defenseInfoPanel, "Can't draw invalid defenseInfoPanel!");
-      glob.assert(this.attackInfoPanel, "Can't draw invalid attackInfoPanel!");
-
-      this.defenseInfoPanel.draw(ctxt);
-      this.attackInfoPanel.draw(ctxt);
     }
   }
 ]);
