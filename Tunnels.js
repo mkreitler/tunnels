@@ -8,41 +8,31 @@
 // 6) Mouse/Touch IO
 // 7) Game states
 
-game = {res: {font: null, floorTiles: null, features: null, heroes: null, monsters: null, bosses: null},
-        spriteSheets: {floor: null, features: null, heroes:null, monsters: null, bosses: null} };
-
-game.isometricLayout = {
-  isLongRow: function(row) {
-    return row % 2 === 0;
-  },
-
-  getXforRowCol: function(row, col) {
-    var bLongRow = this.isLongRow(row),
-        x = 0;
-
-    if (bLongRow) {
-      x = (row % 2 + 1 / 2) * game.Tunnel.FLOOR_TILE_WIDTH + col * game.Tunnel.FLOOR_TILE_WIDTH;
-    }
-    else {
-      x = game.Tunnel.FLOOR_TILE_WIDTH + col * game.Tunnel.FLOOR_TILE_WIDTH;
-    }
-
-    return x;
-  },
-
-  getYforRow: function(row) {
-    return (row + 1) * game.Tunnel.FLOOR_TILE_HEIGHT / 2 + glob.Graphics.getHeight() * game.Tunnels.ISO_HEIGHT_FLOOR_OFFSET;
-  },
-};
+game = {res: {font: null, numFont: null,
+              floorTiles: null, features: null, heroes: null, monsters: null,
+              bosses: null, powerCards: null, skillCards: null, combatPanels: null, combatIcons: null},
+        spriteSheets: {floor: null, features: null, heroes:null, monsters: null,
+              bosses: null, powerCards: null, skillCards: null, combatPanels: null, combatIcons: null} };
 
 game.Tunnels = new glob.NewGlobType(
   // Class Definitions --------------------------------------------------------
   {
     TITLE_FONT_SIZE: 100,
     TITLE_OPTION_SIZE: 33,
+    INFO_PANEL_FONT_SIZE: 80,
     OPTION_SPACING: 1.1, 
 
-    ISO_HEIGHT_FLOOR_OFFSET: 15 / 38,
+    ISO_HEIGHT_FLOOR_OFFSET: 224 / 768,
+    GUI_CARD_ROW_TOP: 635,
+    GUI_CARD_ROW_LEFT: 4,
+    GUI_LOW_PANEL_TOP: 317,
+    GUI_HIGH_PANEL_TOP: 15,
+    GUI_MESSAGE_PANEL_TOP: 551,
+    GUI_MESSAGE_PANEL_HEIGHT: 70,
+    GUI_MESSAGE_PANEL_ALPHA: "rgba(0, 0, 0, 0.33)",
+    GUI_MESSAGE_PANEL_FONT_SIZE:50,
+
+    CARD_SPACING_X: 0.02,
 
     TRANSITION_PERIOD: 1,  // seconds
   },
@@ -55,12 +45,19 @@ game.Tunnels = new glob.NewGlobType(
     {
       init: function() {
         // Request some resources.
+        game.res.font = glob.Resources.loadFont("res/VTCGoblinHandSC.ttf", "moonshadow");
+        game.res.numFont = glob.Resources.loadFont("res/VTCGoblinHandSC.ttf", "moonshadow");
+        // game.res.numFont = glob.Resources.loadFont("res/moonshadow.ttf", "moonshadow");
         game.res.font = glob.Resources.loadFont("res/moonshadow.ttf", "moonshadow");
         game.res.floorTiles = glob.Resources.loadImage("res/normal.png");
         game.res.features = glob.Resources.loadImage("res/featuresReduced.png");
         game.res.heroes = glob.Resources.loadImage("res/heroes.png");
         game.res.monsters = glob.Resources.loadImage("res/reducedEnemies.png");
         game.res.bosses = glob.Resources.loadImage("res/bosses.png");
+        game.res.powerCards = glob.Resources.loadImage("res/powerCards.png");
+        game.res.skillCards = glob.Resources.loadImage("res/skillCards.png");
+        game.res.combatPanels = glob.Resources.loadImage("res/combatPanels.png");
+        game.res.combatIcons = glob.Resources.loadImage("res/combatIcons.png");
 
         this.bFirstPlay = true;
 
@@ -157,7 +154,8 @@ game.Tunnels = new glob.NewGlobType(
       setUpGame: function() {
         var args = null;
 
-        args = {  x: glob.Graphics.getWidth() / 2,
+        args = {
+                  x: glob.Graphics.getWidth() / 2,
                   y: glob.Graphics.getHeight() / 2 - game.Tunnels.TITLE_FONT_SIZE / 2,
                   font: game.res.font,
                   fontSize: game.Tunnels.TITLE_FONT_SIZE,
@@ -198,6 +196,10 @@ game.Tunnels = new glob.NewGlobType(
         game.spriteSheets.heroes = new glob.SpriteSheetGlob(game.res.heroes, 1, 9);
         game.spriteSheets.monsters = new glob.SpriteSheetGlob(game.res.monsters, 8, 8);
         game.spriteSheets.bosses = new glob.SpriteSheetGlob(game.res.bosses, 3, 7);
+        game.spriteSheets.powerCards = new glob.SpriteSheetGlob(game.res.powerCards, 1, 10);
+        game.spriteSheets.skillCards = new glob.SpriteSheetGlob(game.res.skillCards, 1, 4);
+        game.spriteSheets.combatPanels = new glob.SpriteSheetGlob(game.res.combatPanels, 1, 4);
+        game.spriteSheets.combatIcons = new glob.SpriteSheetGlob(game.res.combatIcons, 1, 4);
       },
    },
   ]

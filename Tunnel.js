@@ -17,8 +17,20 @@ game.Tunnel = new glob.NewGlobType(
   BOTTOM_GRADIENT_COLOR_0: "#007e00",
   BOTTOM_GRADIENT_COLOR_1: "#003c00",
   MONSTERS_PER_ROOM: 3,
+  MAX_ATTACK_ICONS: 3,
+  COMBAT_ICON_SPACING: 1.1,
+  COMBAT_ICON_VMARGIN: 0.2,
+
+  COMBAT_ICON: {
+    SWORD: 0,
+    CLAW: 1,
+    BROKEN_SHIELD: 2,
+    SHIELD: 3
+  },
+
 },
 [
+  glob.Listeners,
   game.isometricLayout,
 
   {
@@ -29,11 +41,104 @@ game.Tunnel = new glob.NewGlobType(
       this.backBuffer = this.renderBackground();
       this.floorBuffer = this.renderFloor();
 
+      this.attackInfoPanel = null;
+      this.defenseInfoPanel = null;
+    },
+
+    startSession: function(player) {
       this.buildGrid();
 
       this.placePlayer(player);
       this.placeFeatures();
       this.placeMonsters();
+
+      this.buildAttackInfoPanel();
+      this.buildDefenseInfoPanel();
+    },
+
+    buildAttackInfoPanel: function() {
+      var monster = this.monsters[0],
+          i = 0,
+          icons = [],
+          label = null;
+
+      label = new glob.GUI.Label({
+        x: game.spriteSheets.combatPanels.getCellWidth() / 2,
+        y: game.spriteSheets.combatPanels.getCellHeight() / 2,
+        font: game.res.numFont,
+        fontSize: game.Tunnels.INFO_PANEL_FONT_SIZE,
+        text: "3",
+        activeColor: glob.Graphics.RED,
+        selectedColor: glob.Graphics.RED,
+        onClickedCallback: null,
+        hAlign: 0.5,
+        vAlign: 1.0
+      });
+
+
+      for (i=0; i<game.Tunnel.MAX_ATTACK_ICONS; ++i) {
+        icons.push(new glob.GUI.Panel({
+          spriteSheet: game.spriteSheets.combatIcons,
+          frameIndex: game.Tunnel.COMBAT_ICON.CLAW,
+          x: game.spriteSheets.combatPanels.getCellWidth() / 2 - game.spriteSheets.combatIcons.getCellWidth() / 2 + (i - 1) * game.spriteSheets.combatIcons.getCellWidth() * game.Tunnel.COMBAT_ICON_SPACING,
+          y: game.spriteSheets.combatIcons.getCellHeight() * (game.Tunnel.COMBAT_ICON_VMARGIN),
+        }));
+      }
+
+      this.attackInfoPanel = new glob.GUI.Panel({
+        spriteSheet: game.spriteSheets.combatPanels,
+        frameIndex: 3,
+        x: Math.round(this.getXforRowCol(monster.getRow(), monster.getCol()) - game.spriteSheets.combatPanels.getCellWidth() / 2),
+        y: game.Tunnels.GUI_HIGH_PANEL_TOP,
+        data: {panel: this, icons: icons, label: label}
+      });
+
+      this.attackInfoPanel.addChild(label, true);
+
+      for (i=0; i<icons.length; ++i) {
+        this.attackInfoPanel.addChild(icons[i], true);
+      }
+    },
+
+    buildDefenseInfoPanel: function() {
+      var monster = this.monsters[0],
+          icon = null,
+          label = null;
+
+      label = new glob.GUI.Label({
+        x: game.spriteSheets.combatPanels.getCellWidth() / 2,
+        y: game.spriteSheets.combatPanels.getCellHeight() / 2,
+        font: game.res.numFont,
+        fontSize: game.Tunnels.INFO_PANEL_FONT_SIZE,
+        text: "3",
+        activeColor: glob.Graphics.WHITE,
+        selectedColor: glob.Graphics.WHITE,
+        onClickedCallback: null,
+        hAlign: 0.5,
+        vAlign: 1.0
+      });
+
+      icon = new glob.GUI.Panel({
+        spriteSheet: game.spriteSheets.combatIcons,
+        frameIndex: game.Tunnel.COMBAT_ICON.SHIELD,
+        x: game.spriteSheets.combatPanels.getCellWidth() / 2 - game.spriteSheets.combatIcons.getCellWidth() / 2,
+        y: game.spriteSheets.combatPanels.getCellHeight() - game.spriteSheets.combatIcons.getCellHeight() * (1 + game.Tunnel.COMBAT_ICON_VMARGIN),
+      });
+      
+      this.defenseInfoPanel = new glob.GUI.Panel({
+        spriteSheet: game.spriteSheets.combatPanels,
+        frameIndex: 0,
+        x: Math.round(this.getXforRowCol(monster.getRow(), monster.getCol()) - game.spriteSheets.combatPanels.getCellWidth() / 2),
+        y: game.Tunnels.GUI_LOW_PANEL_TOP,
+        data: {panel: this, icon: icon, label: label}
+      });
+
+      this.defenseInfoPanel.addChild(label, true);
+      this.defenseInfoPanel.addChild(icon, true);
+    },
+
+    startRound: function() {
+      // TODO: stuff.
     },
 
     getBackgroundBuffer: function() {
@@ -54,6 +159,15 @@ game.Tunnel = new glob.NewGlobType(
       this.renderGrid(ctxt);
 
       glob.Graphics.unlock();
+    },
+
+    drawGUI: function(ctxt) {
+      // TODO: Draw monster GUI elements here.
+      glob.assert(this.attackInfoPanel, "Can't draw undefined attackInfoPanel!");
+      glob.assert(this.defenseInfoPanel, "Can't draw undefined defenseInfoPanel!");
+
+      this.attackInfoPanel.draw(ctxt);
+      this.defenseInfoPanel.draw(ctxt);
     },
 
     // Implementation =========================================================
@@ -108,7 +222,7 @@ game.Tunnel = new glob.NewGlobType(
         this.monsters = [];
       }
 
-      for (i=0; i<game.Tunnel.MONSTERS_PER_ROOM; ++i) {
+      for (i=game.Tunnel.MONSTERS_PER_ROOM - 1; i>game.Tunnel.MONSTERS_PER_ROOM - 4; --i) {
         col = game.Tunnel.FLOOR_COLS_SHORT - 2 - i;
         this.monsters.push(new game.Monster(col));
         this.grid[game.Monster.GRID_ROW][col].isEmpty = false;
@@ -176,7 +290,7 @@ game.Tunnel = new glob.NewGlobType(
 
             if (this.grid[row][col].isEmpty) {
               this.grid[row][col].isEmpty = false;
-              this.grid[row][col].contains = {feature: true, ID: Math.round(Math.random() * game.spriteSheets.features.getCellCount())};
+              this.grid[row][col].contains = {feature: true, ID: Math.floor(Math.random() * game.spriteSheets.features.getCellCount())};
             }
           }
         }
@@ -247,21 +361,6 @@ game.Tunnel = new glob.NewGlobType(
       ctxt.fillRect(0, yStart, glob.Graphics.getWidth(), yEnd);
       ctxt.closePath();
 
-      // Stroke around gradient region.
-      // ctxt.beginPath();
-      // ctxt.lineWidth = 3;
-      // ctxt.strokeStyle = glob.Graphics.LT_GRAY;
-      // ctxt.rect(0, yStart, glob.Graphics.getWidth(), yEnd);
-      // ctxt.stroke();
-      // ctxt.closePath();
-
-      // Center box, flat black, no borders.
-      // ctxt.beginPath();
-      // ctxt.fillStyle = glob.Graphics.BLACK;
-      // ctxt.fillRect(0, yEnd, glob.Graphics.getWidth(), yEnd + glob.Graphics.getHeight() / 10);
-      // yEnd += glob.Graphics.getHeight() / 10;
-      // ctxt.closePath();
-
       // Gradient fill, lower screen.
       yEnd = glob.Graphics.getHeight() * game.Tunnel.BACK_PANEL_TOP_HEIGHT_FACTOR;
       grd = ctxt.createLinearGradient(0, yEnd, 0, glob.Graphics.getHeight());
@@ -272,13 +371,11 @@ game.Tunnel = new glob.NewGlobType(
       ctxt.fillRect(0, yEnd, glob.Graphics.getWidth(), glob.Graphics.getHeight());
       ctxt.closePath();
 
-      // Stroke around lower gradient region.
-      // ctxt.beginPath();
-      // ctxt.lineWidth = 3;
-      // ctxt.strokeStyle = glob.Graphics.LT_GRAY;
-      // ctxt.rect(0, yEnd, glob.Graphics.getWidth(), glob.Graphics.getHeight());
-      // ctxt.stroke();
-      // ctxt.closePath();
+      // Alpha fill, message region.
+      ctxt.beginPath();
+      ctxt.fillStyle = game.Tunnels.GUI_MESSAGE_PANEL_ALPHA;
+      ctxt.fillRect(0, game.Tunnels.GUI_MESSAGE_PANEL_TOP, glob.Graphics.getWidth(), game.Tunnels.GUI_MESSAGE_PANEL_HEIGHT);
+      ctxt.closePath();
 
       return backBuffer;
     },
