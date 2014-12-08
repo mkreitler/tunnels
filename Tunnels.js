@@ -34,8 +34,16 @@ game.Tunnels = new glob.NewGlobType(
     GUI_MESSAGE_PANEL_HEIGHT: 70,
     GUI_MESSAGE_PANEL_ALPHA: "rgba(0, 0, 0, 0.33)",
     GUI_MESSAGE_PANEL_FONT_SIZE:50,
+    GUI_CARD_TO_INFO_OFFSET_Y: 50,
+
+    RESULT: {
+      MONSTER_DEFEATED: 0,
+      MONSTERS_ADVANCE: 1,
+      PLAYER_PROTECTED: 2,
+    },
 
     CARD_SPACING_X: 0.02,
+    HIGHLIGHT_WIDTH: 4,
 
     TRANSITION_PERIOD: 1,  // seconds
   },
@@ -48,10 +56,11 @@ game.Tunnels = new glob.NewGlobType(
     {
       init: function() {
         // Request some resources.
-        game.res.font = glob.Resources.loadFont("res/VTCGoblinHandSC.ttf", "moonshadow");
-        game.res.numFont = glob.Resources.loadFont("res/VTCGoblinHandSC.ttf", "moonshadow");
+        // game.res.font = glob.Resources.loadFont("res/VTCGoblinHandSC.ttf", "moonshadow");
+        // game.res.numFont = glob.Resources.loadFont("res/VTCGoblinHandSC.ttf", "moonshadow");
         // game.res.numFont = glob.Resources.loadFont("res/moonshadow.ttf", "moonshadow");
         game.res.font = glob.Resources.loadFont("res/moonshadow.ttf", "moonshadow");
+        game.res.numFont = game.res.font;
         game.res.floorTiles = glob.Resources.loadImage("res/normal.png");
         game.res.features = glob.Resources.loadImage("res/featuresReduced.png");
         game.res.heroes = glob.Resources.loadImage("res/heroes.png");

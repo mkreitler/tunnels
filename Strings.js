@@ -19,7 +19,26 @@ game.Strings = {
   SKILL_DESC_COMBO: "Multiplies your attack by the next Power card.",
   SKILL_DESC_DEFLECT: "Divides an attack by your next Power card.",
 
+  WEAPON_SHORT_SWORD: "Short Sword",
+
+  ARMOR_LEATHERS: "Leather Armor",
+
   HELP_SKILL_PLACEMENT: "Play a skill card on a highlighted box.",
 
-  INTRO_MSG_01: "Click this message to clear it.",
+  INTRO_HELP: [
+    "Click here until messages stop.",
+    "Object: defeat monsters.",
+    "How: use Skill and Power cards.",
+    "Start by playing a red Skill card.",
+  ],
+
+  SKILL_NAG: "Play a red skill card.",
+  POWER_NAG: "Play a numbered power card.",
+  POWER_LEVEL_UP_MSG: "You are now power level",
+  SKILL_LEVEL_UP_MSG: "You are now skill level",
+
+  DEFENDED_MESSAGE: "You blocked the attack!",
+  DAMAGE_PREFIX: "You took",
+  DAMAGE_SUFFIX_SINGULAR: "point of damage.",
+  DAMAGE_SUFFIX_PLURAL: "points of damage.",
 };
